@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+NAME=tcpw
+ARGS="$@"
+
+build() {
+  go build -ldflags="-s -w" $ARGS -trimpath -o $1
+  ./upx $1
+}
+
+.venv/bin/pyminify -i $NAME/__main__.py
+
+export CGO_ENABLED=0
+export GOOS=linux
+
+GOARCH=amd64 build $NAME/$NAME-x86_64
+GOARCH=arm64 build $NAME/$NAME-aarch64
+GOARCH=arm GOARM=7 build $NAME/$NAME-armv7l

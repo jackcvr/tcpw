@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tcpw"
+version = "0.1.0"
+authors = [
+    {name = "Andrii Kuzmin", email = "jack.cvr@gmail.com"},
+]
+description = "Wait until TCP endpoints are open"
+keywords = ["wait-for-it", "waitforit", "tcp", "expect", "docker", "containers"]
+readme = "README.md"
+requires-python = ">=3"
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "python-minifier",
+    "build",
+    "twine",
+]
+
+[project.scripts]
+tcpw = "tcpw.__main__:main"
+
+[project.urls]
+Documentation = "https://github.com/jackcvr/tcpw#readme"
+Issues = "https://github.com/jackcvr/tcpw/issues"
+Source = "https://github.com/jackcvr/tcpw"
+
+[tool.setuptools]
+packages = ["tcpw"]
+
+[tool.setuptools.package-data]
+tcpw = ["*"]
