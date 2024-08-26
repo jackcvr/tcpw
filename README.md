@@ -26,7 +26,7 @@ That is yet another alternative to `wait-for-it.sh`.
 
 Download executable file:
 
-`sudo NAME=tcpw sh -c "wget -O $NAME https://raw.githubusercontent.com/jackcvr/tcpw/main/tcpw/tcpw-$(uname -m) && chmod +x $NAME"`
+`sh -c "wget -O tcpw https://raw.githubusercontent.com/jackcvr/tcpw/main/tcpw/tcpw-$(uname -m) && chmod +x tcpw"`
 
 or:
 
