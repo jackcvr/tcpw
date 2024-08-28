@@ -10,6 +10,8 @@ services:
     command: [sh, -c, "sleep 10 && socat -d TCP-LISTEN:8000,reuseaddr,fork stdout"]
 
   tcpw:
-    build: .
+    image: alpine:latest
+    volumes:
+      - ./tcpw/tcpw-x86_64:/usr/local/bin/tcpw:ro
     entrypoint: [tcpw, -t, 30s, -v, -a, server0:8000, -a, server1:8000]
     command: [echo, Done]
