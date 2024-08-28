@@ -6,10 +6,8 @@ ARGS="$@"
 
 build() {
   go build -ldflags="-s -w" $ARGS -trimpath -o $1
-  ./upx $1
+  ./upx --8086 $1
 }
-
-.venv/bin/pyminify -i $NAME/__main__.py
 
 export CGO_ENABLED=0
 export GOOS=linux

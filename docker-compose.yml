@@ -1,0 +1,15 @@
+services:
+  server0:
+    image: alpine/socat:latest
+    entrypoint: []
+    command: [sh, -c, "sleep 5 && socat -d TCP-LISTEN:8000,reuseaddr,fork stdout"]
+
+  server1:
+    image: alpine/socat:latest
+    entrypoint: []
+    command: [sh, -c, "sleep 10 && socat -d TCP-LISTEN:8000,reuseaddr,fork stdout"]
+
+  tcpw:
+    build: .
+    entrypoint: [tcpw, -t, 30s, -v, -a, server0:8000, -a, server1:8000]
+    command: [echo, Done]

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tcpw"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
     {name = "Andrii Kuzmin", email = "jack.cvr@gmail.com"},
 ]
@@ -19,7 +19,6 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = [
-    "python-minifier",
     "build",
     "twine",
 ]
