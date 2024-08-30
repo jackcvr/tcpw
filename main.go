@@ -27,9 +27,7 @@ var (
 
 func _printError(format string, args ...any) {
 	if !quiet {
-		if _, err := fmt.Fprintf(flagOutput, format+"\n", args...); err != nil {
-			panic(err)
-		}
+		fmt.Fprintf(flagOutput, format+"\n", args...)
 	}
 }
 
@@ -74,8 +72,15 @@ func init() {
 	}
 	flag.Parse()
 
+	var errMsg string
 	if len(endpoints) == 0 {
-		_printError("No endpoints provided\n")
+		errMsg = "No endpoints provided"
+	}
+	if on != "s" && on != "f" && on != "any" {
+		errMsg = "Only 's' or 'f' of 'any' are allowed for '-on' argument"
+	}
+	if errMsg != "" {
+		_printError(errMsg + "\n")
 		flag.Usage()
 		os.Exit(22) // Invalid argument
 	}
@@ -85,10 +90,16 @@ func init() {
 }
 
 func main() {
-	os.Exit(_main())
+	if err := _main(); err != nil {
+		var exErr *exec.ExitError
+		if errors.As(err, &exErr) {
+			os.Exit(exErr.ExitCode())
+		}
+		os.Exit(1)
+	}
 }
 
-func _main() int {
+func _main() error {
 	err := func() error {
 		g, ctx := errgroup.WithContext(context.Background())
 		if timeout > 0 {
@@ -129,12 +140,8 @@ func _main() int {
 		return g.Wait()
 	}()
 
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			_printError("timeout error")
-		} else {
-			_printError(err.Error())
-		}
+	if errors.Is(err, context.DeadlineExceeded) {
+		_printError("timeout error")
 	}
 
 	if len(command) > 0 && ((on == "s" && err == nil) || (on == "f" && err != nil) || on == "any") {
@@ -142,18 +149,10 @@ func _main() int {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
-		var exErr *exec.ExitError
 		if err != nil {
-			if errors.As(err, &exErr) {
-				return exErr.ExitCode()
-			} else {
-				_printError(err.Error())
-			}
+			_printError(err.Error())
 		}
 	}
 
-	if err != nil {
-		return 1
-	}
-	return 0
+	return err
 }
