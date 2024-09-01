@@ -66,7 +66,7 @@ func init() {
 	flag.BoolVar(&quiet, "q", false, "Do not print anything (default false)")
 	flag.BoolVar(&verbose, "v", false, "Verbose mode (default false)")
 	flag.Var(&endpoints, "a", "Endpoint to await, in the form 'host:port'")
-	flag.StringVar(&on, "on", "s", "Condition for command execution. Possible values: 's' - after success, 'f' - after failure, 'any' - always (default 's')")
+	flag.StringVar(&on, "on", "s", "Condition for command execution. Possible values: 's' - after success, 'f' - after failure, 'any' - always")
 	flag.Usage = func() {
 		const usageFormat = "Usage: %s [-t timeout] [-i interval] [-on (s|f|any)] [-q] [-v] [-a host:port ...] [command [args]]\n"
 		_printError(usageFormat, os.Args[0])

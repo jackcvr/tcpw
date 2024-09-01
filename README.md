@@ -45,7 +45,7 @@ Usage: tcpw [-t timeout] [-i interval] [-on (s|f|any)] [-q] [-v] [-a host:port .
   -i duration
     	Interval between retries in format N{ns,ms,s,m,h} (default 1s)
   -on string
-    	Condition for command execution. Possible values: 's' - after success, 'f' - after failure, 'any' - always (default 's') (default "s")
+    	Condition for command execution. Possible values: 's' - after success, 'f' - after failure, 'any' - always (default "s")
   -q	Do not print anything (default false)
   -t duration
     	Timeout in format N{ns,ms,s,m,h}, e.g. '5s' == 5 seconds. Zero for no timeout (default 0)
