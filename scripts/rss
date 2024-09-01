@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+PID=$(pidof "$1")
+
+while rss="$(ps --no-headers -o "rss" -p "$PID")"; do
+  printf "%s %s\n" "$(date)" "$rss"
+  sleep 1
+done

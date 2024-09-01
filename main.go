@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"strings"
 	"time"
 )
@@ -58,6 +59,8 @@ func (s *StringList) Set(value string) error {
 }
 
 func init() {
+	debug.SetGCPercent(25)
+
 	flag.DurationVar(&timeout, "t", 0, "Timeout in format N{ns,ms,s,m,h}, e.g. '5s' == 5 seconds. Zero for no timeout (default 0)")
 	flag.DurationVar(&interval, "i", time.Second, "Interval between retries in format N{ns,ms,s,m,h}")
 	flag.BoolVar(&quiet, "q", false, "Do not print anything (default false)")
@@ -108,30 +111,27 @@ func _main() error {
 			defer cancel()
 		}
 
+		d := net.Dialer{Timeout: timeout}
 		for _, addr := range endpoints {
 			g.Go(func() error {
-				var d net.Dialer
-				var addrErr *net.AddrError
-				var dnsErr *net.DNSError
+				ticker := time.NewTicker(interval)
+				defer ticker.Stop()
 				_printDebug("connecting to %s...", addr)
 				for {
-					if conn, err := d.DialContext(ctx, "tcp", addr); err != nil {
-						_printDebug(err.Error())
-						if errors.As(err, &addrErr) || errors.As(err, &dnsErr) {
-							return err
-						}
+					res, err := TryDial(ctx, d, addr)
+					if err != nil {
+						return err
+					}
+					if res {
+						_printInfo("successfully connected to %s", addr)
+						return nil
+					} else {
 						select {
+						case <-ticker.C:
+							break
 						case <-ctx.Done():
 							return ctx.Err()
-						default:
-							time.Sleep(interval)
 						}
-					} else {
-						_printInfo("successfully connected to %s", addr)
-						if err = conn.Close(); err != nil {
-							_printError(err.Error())
-						}
-						return nil
 					}
 				}
 			})
@@ -155,4 +155,21 @@ func _main() error {
 	}
 
 	return err
+}
+
+func TryDial(ctx context.Context, d net.Dialer, addr string) (bool, error) {
+	var addrErr *net.AddrError
+	var dnsErr *net.DNSError
+	if conn, err := d.DialContext(ctx, "tcp", addr); err != nil {
+		_printDebug(err.Error())
+		if errors.As(err, &addrErr) || errors.As(err, &dnsErr) {
+			return false, err
+		}
+		return false, nil
+	} else {
+		if err = conn.Close(); err != nil {
+			_printError(err.Error())
+		}
+		return true, nil
+	}
 }
