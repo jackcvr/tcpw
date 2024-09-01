@@ -1,8 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 VENV=".venv/bin"
 
-rm -rf dist/
-$VENV/python -m build
-$VENV/twine upload dist/*
+for arch in "amd64" "arm64" "armv7l"; do
+  rm -rf $arch/dist/
+  $VENV/python3 -m build $arch/
+  $VENV/twine upload $arch/dist/*
+done

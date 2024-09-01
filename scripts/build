@@ -12,6 +12,6 @@ build() {
 export CGO_ENABLED=0
 export GOOS=linux
 
-GOARCH=amd64 build $NAME/$NAME-x86_64
-GOARCH=arm64 build $NAME/$NAME-aarch64
-GOARCH=arm GOARM=7 build $NAME/$NAME-armv7l
+GOARCH=amd64 build amd64/$NAME/$NAME
+GOARCH=arm64 build arm64/$NAME/$NAME
+GOARCH=arm GOARM=7 build armv7l/$NAME/$NAME

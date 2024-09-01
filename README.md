@@ -11,9 +11,9 @@ That is yet another alternative to `wait-for-it.sh`.
 - available as a binary executable without any dependencies (file size <1mb).
   - Optimized with: `-ldflags="-s -w" -trimpath` and `upx`
   - Pre-built binaries:
-    - [tcpw-linux-x86_64](https://raw.githubusercontent.com/jackcvr/tcpw/main/tcpw/tcpw-x86_64)
-    - [tcpw-linux-aarch64](https://raw.githubusercontent.com/jackcvr/tcpw/main/tcpw/tcpw-aarch64)
-    - [tcpw-linux-armv7l](https://raw.githubusercontent.com/jackcvr/tcpw/main/tcpw/tcpw-armv7l)
+    - [tcpw-linux-x86_64](https://raw.githubusercontent.com/jackcvr/tcpw/main/amd64/tcpw/tcpw)
+    - [tcpw-linux-aarch64](https://raw.githubusercontent.com/jackcvr/tcpw/main/tcpw/arm64/tcpw)
+    - [tcpw-linux-armv7l](https://raw.githubusercontent.com/jackcvr/tcpw/main/tcpw/armv7l/tcpw)
 - available on `PyPI`
 - additionally, you can set:
     - more than one endpoint: `-a google.com:80 -a booble.gum:8080 ...`

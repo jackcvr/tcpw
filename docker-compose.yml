@@ -22,6 +22,6 @@ services:
   tcpw:
     image: alpine:latest
     volumes:
-      - ./tcpw/tcpw-x86_64:/usr/local/bin/tcpw:ro
+      - ./amd64/tcpw/tcpw:/usr/local/bin/tcpw:ro
     entrypoint: [tcpw, -t, 620s, -v, -a, server0:8000, -a, server1:8000, -a, server2:8000, -a, server3:8000]
     command: [echo, Done]
