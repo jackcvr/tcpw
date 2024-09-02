@@ -11,8 +11,8 @@ That is yet another alternative to `wait-for-it.sh`.
 - available as a binary executable without any dependencies (file size <1mb).
   - Optimized with: `-ldflags="-s -w" -trimpath` and `upx`
   - Pre-built binaries:
-    - [tcpw-linux-x86_64](https://raw.githubusercontent.com/jackcvr/tcpw/main/amd64/tcpw/tcpw)
-    - [tcpw-linux-aarch64](https://raw.githubusercontent.com/jackcvr/tcpw/main/tcpw/arm64/tcpw)
+    - [tcpw-linux-x86_64](https://raw.githubusercontent.com/jackcvr/tcpw/main/x86_64/tcpw/tcpw)
+    - [tcpw-linux-aarch64](https://raw.githubusercontent.com/jackcvr/tcpw/main/tcpw/aarch64/tcpw)
     - [tcpw-linux-armv7l](https://raw.githubusercontent.com/jackcvr/tcpw/main/tcpw/armv7l/tcpw)
 - available on `PyPI`
 - additionally, you can set:
@@ -26,11 +26,13 @@ That is yet another alternative to `wait-for-it.sh`.
 
 Download executable file:
 
-`sh -c "wget -O tcpw https://raw.githubusercontent.com/jackcvr/tcpw/main/tcpw/tcpw-$(uname -m) && chmod +x tcpw"`
+`sh -c "wget -O tcpw https://raw.githubusercontent.com/jackcvr/tcpw/main/$(uname -m)/tcpw && chmod +x tcpw"`
 
 or:
 
-`pip install tcpw`
+- x86_64: `pip install tcpw`
+- aarch64: `pip install tcpw[arm64]`
+- armv7l: `pip install tcpw[armv7l]` 
 
 [![PyPI - Version](https://img.shields.io/pypi/v/tcpw.svg)](https://pypi.org/project/tcpw)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tcpw.svg)](https://pypi.org/project/tcpw)

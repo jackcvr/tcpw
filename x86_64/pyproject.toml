@@ -3,8 +3,8 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tcpw-arm64"
-version = "0.1.4"
+name = "tcpw"
+version = "0.1.6"
 authors = [
     {name = "Andrii Kuzmin", email = "jack.cvr@gmail.com"},
 ]
@@ -16,6 +16,11 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
+
+[project.optional-dependencies]
+arm64 = ["tcpw-arm64"]
+armv7l = ["tcpw-armv7l"]
+dev = ["build", "twine"]
 
 [project.scripts]
 tcpw = "tcpw.__main__:main"
