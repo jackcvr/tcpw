@@ -15,31 +15,30 @@ import (
 	"time"
 )
 
-var (
-	timeout    time.Duration
-	interval   time.Duration
-	quiet      bool
-	verbose    bool
-	endpoints  StringList
-	on         string
-	command    []string
-	flagOutput = flag.CommandLine.Output()
-)
+var config struct {
+	timeout   time.Duration
+	interval  time.Duration
+	quiet     bool
+	verbose   bool
+	endpoints StringList
+	on        string
+	command   []string
+}
 
-func _printError(format string, args ...any) {
-	if !quiet {
-		fmt.Fprintf(flagOutput, format+"\n", args...)
+func printError(format string, args ...any) {
+	if !config.quiet {
+		fmt.Fprintf(os.Stderr, format+"\n", args...)
 	}
 }
 
-func _printInfo(format string, args ...any) {
-	if !quiet {
+func logInfo(format string, args ...any) {
+	if !config.quiet {
 		log.Printf(format, args...)
 	}
 }
 
-func _printDebug(format string, args ...any) {
-	if !quiet && verbose {
+func logDebug(format string, args ...any) {
+	if !config.quiet && config.verbose {
 		log.Printf(format, args...)
 	}
 }
@@ -60,40 +59,42 @@ func (s *StringList) Set(value string) error {
 
 func init() {
 	debug.SetGCPercent(25)
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+	flag.CommandLine.SetOutput(os.Stderr)
 
-	flag.DurationVar(&timeout, "t", 0, "Timeout in format N{ns,ms,s,m,h}, e.g. '5s' == 5 seconds. Zero for no timeout (default 0)")
-	flag.DurationVar(&interval, "i", time.Second, "Interval between retries in format N{ns,ms,s,m,h}")
-	flag.BoolVar(&quiet, "q", false, "Do not print anything (default false)")
-	flag.BoolVar(&verbose, "v", false, "Verbose mode (default false)")
-	flag.Var(&endpoints, "a", "Endpoint to await, in the form 'host:port'")
-	flag.StringVar(&on, "on", "s", "Condition for command execution. Possible values: 's' - after success, 'f' - after failure, 'any' - always")
+	flag.DurationVar(&config.timeout, "t", 0, "Timeout in format N{ns,ms,s,m,h}, e.g. '5s' == 5 seconds. Zero for no timeout (default 0)")
+	flag.DurationVar(&config.interval, "i", time.Second, "Interval between retries in format N{ns,ms,s,m,h}")
+	flag.BoolVar(&config.quiet, "q", false, "Do not print anything (default false)")
+	flag.BoolVar(&config.verbose, "v", false, "Verbose mode (default false)")
+	flag.Var(&config.endpoints, "a", "Endpoint to await, in the form 'host:port'")
+	flag.StringVar(&config.on, "on", "s", "Condition for command execution. Possible values: 's' - after success, 'f' - after failure, 'any' - always")
 	flag.Usage = func() {
 		const usageFormat = "Usage: %s [-t timeout] [-i interval] [-on (s|f|any)] [-q] [-v] [-a host:port ...] [command [args]]\n"
-		_printError(usageFormat, os.Args[0])
+		printError(usageFormat, os.Args[0])
 		flag.PrintDefaults()
-		_printError("  command args\n    \tExecute command with arguments after the test finishes (default: if connection succeeded)\n")
+		printError("  command args\n    \tExecute command with arguments after the test finishes (default: if connection succeeded)\n")
 	}
-	flag.Parse()
+}
 
-	var errMsg string
-	if len(endpoints) == 0 {
-		errMsg = "No endpoints provided"
+func checkConfig() error {
+	if len(config.endpoints) == 0 {
+		return errors.New("no endpoints provided")
 	}
-	if on != "s" && on != "f" && on != "any" {
-		errMsg = "Only 's' or 'f' of 'any' are allowed for '-on' argument"
+	if config.on != "s" && config.on != "f" && config.on != "any" {
+		return errors.New("only 's' or 'f' of 'any' are allowed for '-on' argument")
 	}
-	if errMsg != "" {
-		_printError(errMsg + "\n")
-		flag.Usage()
-		os.Exit(22) // Invalid argument
-	}
-
-	command = flag.Args()
-	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+	return nil
 }
 
 func main() {
-	if err := _main(); err != nil {
+	flag.Parse()
+	if err := checkConfig(); err != nil {
+		printError(err.Error())
+		flag.Usage()
+		os.Exit(22) // Invalid argument code
+	}
+	config.command = flag.Args()
+	if err := Run(); err != nil {
 		var exErr *exec.ExitError
 		if errors.As(err, &exErr) {
 			os.Exit(exErr.ExitCode())
@@ -102,73 +103,73 @@ func main() {
 	}
 }
 
-func _main() error {
-	err := func() error {
-		g, ctx := errgroup.WithContext(context.Background())
-		if timeout > 0 {
-			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(ctx, timeout)
-			defer cancel()
+func Run() error {
+	err := Connect()
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			printError("timeout error")
+		} else {
+			printError(err.Error())
 		}
-
-		d := net.Dialer{Timeout: timeout}
-		for _, addr := range endpoints {
-			g.Go(func() error {
-				ticker := time.NewTicker(interval)
-				defer ticker.Stop()
-				_printDebug("connecting to %s...", addr)
-				for {
-					res, err := TryDial(ctx, d, addr)
-					if err != nil {
-						return err
-					}
-					if res {
-						_printInfo("successfully connected to %s", addr)
-						return nil
-					} else {
-						select {
-						case <-ticker.C:
-							break
-						case <-ctx.Done():
-							return ctx.Err()
-						}
-					}
-				}
-			})
-		}
-
-		return g.Wait()
-	}()
-
-	if errors.Is(err, context.DeadlineExceeded) {
-		_printError("timeout error")
 	}
-
-	if len(command) > 0 && ((on == "s" && err == nil) || (on == "f" && err != nil) || on == "any") {
-		cmd := exec.Command(command[0], command[1:]...)
+	if len(config.command) > 0 && ((config.on == "s" && err == nil) || (config.on == "f" && err != nil) || config.on == "any") {
+		cmd := exec.Command(config.command[0], config.command[1:]...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err = cmd.Run()
-		if err != nil {
-			_printError(err.Error())
-		}
+	}
+	return err
+}
+
+func Connect() error {
+	g, ctx := errgroup.WithContext(context.Background())
+	if config.timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, config.timeout)
+		defer cancel()
 	}
 
-	return err
+	d := net.Dialer{Timeout: config.timeout}
+	for _, addr := range config.endpoints {
+		g.Go(func() error {
+			ticker := time.NewTicker(config.interval)
+			defer ticker.Stop()
+			logDebug("connecting to %s...", addr)
+			for {
+				res, err := TryDial(ctx, d, addr)
+				if err != nil {
+					return err
+				}
+				if res {
+					logInfo("successfully connected to %s", addr)
+					return nil
+				} else {
+					select {
+					case <-ticker.C:
+						break
+					case <-ctx.Done():
+						return ctx.Err()
+					}
+				}
+			}
+		})
+	}
+
+	return g.Wait()
 }
 
 func TryDial(ctx context.Context, d net.Dialer, addr string) (bool, error) {
 	var addrErr *net.AddrError
 	var dnsErr *net.DNSError
 	if conn, err := d.DialContext(ctx, "tcp", addr); err != nil {
-		_printDebug(err.Error())
+		logDebug(err.Error())
 		if errors.As(err, &addrErr) || errors.As(err, &dnsErr) {
 			return false, err
 		}
 		return false, nil
 	} else {
 		if err = conn.Close(); err != nil {
-			_printError(err.Error())
+			printError(err.Error())
 		}
 		return true, nil
 	}
