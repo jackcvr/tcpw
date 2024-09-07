@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tcpw"
-version = "0.1.9"
+version = "0.1.10"
 authors = [
     {name = "Andrii Kuzmin", email = "jack.cvr@gmail.com"},
 ]
@@ -18,8 +18,6 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-arm64 = ["tcpw-arm64"]
-armv7l = ["tcpw-armv7l"]
 dev = ["build", "twine"]
 
 [project.scripts]

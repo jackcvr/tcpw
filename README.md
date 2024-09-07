@@ -8,13 +8,13 @@ That is yet another alternative to `wait-for-it.sh`.
 
 ## Rationale
 
-- available as a binary executable without any dependencies (file size <1mb).
+- available as a binary executable without any dependencies (file size <1M).
   - Optimized with: `-ldflags="-s -w" -trimpath` and `upx`
   - Pre-built binaries:
-    - [tcpw-linux-x86_64](https://raw.githubusercontent.com/jackcvr/tcpw/main/x86_64/tcpw/tcpw)
-    - [tcpw-linux-aarch64](https://raw.githubusercontent.com/jackcvr/tcpw/main/aarch64/tcpw/tcpw)
-    - [tcpw-linux-armv7l](https://raw.githubusercontent.com/jackcvr/tcpw/main/armv7l/tcpw/tcpw)
-- available on `PyPI`
+    - [tcpw-linux-x86_64](https://raw.githubusercontent.com/jackcvr/tcpw/main/bin/x86_64/tcpw)
+    - [tcpw-linux-aarch64](https://raw.githubusercontent.com/jackcvr/tcpw/main/bin/aarch64/tcpw)
+    - [tcpw-linux-armv7l](https://raw.githubusercontent.com/jackcvr/tcpw/main/bin/armv7l/tcpw)
+- available on `PyPI` (x86_64 only)
 - additionally, you can set:
     - more than one endpoint: `-a google.com:80 -a booble.gum:8080 ...`
     - command, which can be executed only after success, failure or any result: `-on f -a google.com:9999 echo "Endpoint is down"`
@@ -26,13 +26,11 @@ That is yet another alternative to `wait-for-it.sh`.
 
 Download executable file:
 
-`sh -c "wget -O tcpw https://raw.githubusercontent.com/jackcvr/tcpw/main/$(uname -m)/tcpw/tcpw && chmod +x tcpw"`
+`sh -c "wget -O tcpw https://raw.githubusercontent.com/jackcvr/tcpw/main/bin/$(uname -m)/tcpw && chmod +x tcpw"`
 
 or:
 
-- x86_64: `pip install tcpw`
-- aarch64: `pip install tcpw[arm64]`
-- armv7l: `pip install tcpw[armv7l]` 
+`pip install tcpw`
 
 [![PyPI - Version](https://img.shields.io/pypi/v/tcpw.svg)](https://pypi.org/project/tcpw)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tcpw.svg)](https://pypi.org/project/tcpw)

@@ -54,14 +54,14 @@ func TestCheckConfig(t *testing.T) {
 		defer resetConfig()
 		config.endpoints = []string{"localhost:1234"}
 		if err := checkConfig(); err != nil {
-			t.Errorf(err.Error())
+			t.Fatal(err.Error())
 		}
 	})
 
 	t.Run("Test error: no endpoints", func(t *testing.T) {
 		defer resetConfig()
 		if err := checkConfig(); err.Error() != "no endpoints provided" {
-			t.Errorf("Returned wrong error")
+			t.Fatal("Returned wrong error")
 		}
 	})
 
@@ -70,7 +70,7 @@ func TestCheckConfig(t *testing.T) {
 		config.endpoints = []string{"localhost:1234"}
 		config.on = "w"
 		if err := checkConfig(); err.Error() != "only 's' or 'f' of 'any' are allowed for '-on' argument" {
-			t.Errorf("Returned wrong error")
+			t.Fatal("Returned wrong error")
 		}
 	})
 }
@@ -87,10 +87,10 @@ func TestTryDial(t *testing.T) {
 		addr := startListener("")
 		res, err := TryDial(ctx, net.Dialer{Timeout: 1 * time.Second}, addr.String())
 		if err != nil {
-			t.Errorf("Unexpected error: %v", err)
+			t.Fatalf("Unexpected error: %v", err)
 		}
 		if res != true {
-			t.Errorf("Connection failed")
+			t.Fatal("Connection failed")
 		}
 	})
 
@@ -99,10 +99,10 @@ func TestTryDial(t *testing.T) {
 
 		res, err := TryDial(ctx, net.Dialer{}, getFreeTCPAddr().String())
 		if err != nil {
-			t.Errorf("Unexpected error: %v", err)
+			t.Fatalf("Unexpected error: %v", err)
 		}
 		if res != false {
-			t.Errorf("Connection succeeded on fail test")
+			t.Fatal("Connection succeeded on fail test")
 		}
 	})
 
@@ -111,9 +111,9 @@ func TestTryDial(t *testing.T) {
 
 		res, err := TryDial(ctx, net.Dialer{}, badAddr)
 		if err == nil {
-			t.Errorf("Unexpected success: %v", res)
+			t.Fatalf("Unexpected success: %v", res)
 		} else if err.Error() != badAddrError {
-			t.Errorf("Unexpected error string: %v", err)
+			t.Fatalf("Unexpected error string: %v", err)
 		}
 	})
 }
@@ -135,7 +135,7 @@ func TestRun(t *testing.T) {
 		}()
 		config.endpoints = []string{addr1, addr2}
 		if err := Run(); err != nil {
-			t.Errorf("Unexpected error: %v", err)
+			t.Fatalf("Unexpected error: %v", err)
 		}
 	})
 
@@ -144,7 +144,7 @@ func TestRun(t *testing.T) {
 		config.timeout = 100 * time.Millisecond
 		config.endpoints = []string{getFreeTCPAddr().String()}
 		if err := Run(); err == nil {
-			t.Errorf("Connection succeeded on fail test")
+			t.Fatal("Connection succeeded on fail test")
 		}
 	})
 
@@ -153,9 +153,9 @@ func TestRun(t *testing.T) {
 		config.timeout = 100 * time.Millisecond
 		config.endpoints = []string{badAddr}
 		if err := Run(); err == nil {
-			t.Errorf("Connection succeeded on fail test")
+			t.Fatalf("Connection succeeded on fail test")
 		} else if err.Error() != badAddrError {
-			t.Errorf("Unexpected error: %v", err)
+			t.Fatalf("Unexpected error: %v", err)
 		}
 	})
 
@@ -166,10 +166,10 @@ func TestRun(t *testing.T) {
 		file := t.TempDir() + "/test"
 		config.command = []string{"touch", file}
 		if err := Run(); err != nil {
-			t.Errorf("Unexpected error: %v", err)
+			t.Fatalf("Unexpected error: %v", err)
 		}
 		if _, err := os.Stat(file); os.IsNotExist(err) {
-			t.Errorf("File %s does not exist", file)
+			t.Fatalf("File %s does not exist", file)
 		}
 	})
 
@@ -180,10 +180,10 @@ func TestRun(t *testing.T) {
 		file := t.TempDir() + "/test"
 		config.command = []string{"touch", file}
 		if err := Run(); err == nil {
-			t.Errorf("Connection succeeded on fail test")
+			t.Fatalf("Connection succeeded on fail test")
 		}
 		if _, err := os.Stat(file); err == nil {
-			t.Errorf("File %s exists on fail test", file)
+			t.Fatalf("File %s exists on fail test", file)
 		}
 	})
 
@@ -195,10 +195,10 @@ func TestRun(t *testing.T) {
 		file := t.TempDir() + "/test"
 		config.command = []string{"touch", file}
 		if err := Run(); err != nil {
-			t.Errorf("Unexpected command(touch ...) error: %v", err)
+			t.Fatalf("Unexpected command(touch ...) error: %v", err)
 		}
 		if _, err := os.Stat(file); os.IsNotExist(err) {
-			t.Errorf("File %s does not exist, but '-on f' argument was provided", file)
+			t.Fatalf("File %s does not exist, but '-on f' argument was provided", file)
 		}
 	})
 }
