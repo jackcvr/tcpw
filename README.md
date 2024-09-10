@@ -1,5 +1,7 @@
 # tcpw
 
+[![codecov](https://codecov.io/gh/jackcvr/tcpw/graph/badge.svg?token=X9EVRGM518)](https://codecov.io/gh/jackcvr/tcpw)
+
 `tcpw` (TCP Wait) is a tool that waits until TCP endpoints are open.
 
 It is useful for synchronizing the spin-up of interdependent services, such as linked docker containers.
