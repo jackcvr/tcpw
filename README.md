@@ -10,13 +10,7 @@ That is yet another alternative to `wait-for-it.sh`.
 
 ## Rationale
 
-- available as a binary executable without any dependencies (file size <1M).
-  - Optimized with: `-ldflags="-s -w" -trimpath` and `upx`
-  - Pre-built binaries:
-    - [tcpw-linux-x86_64](https://raw.githubusercontent.com/jackcvr/tcpw/main/bin/x86_64/tcpw)
-    - [tcpw-linux-aarch64](https://raw.githubusercontent.com/jackcvr/tcpw/main/bin/aarch64/tcpw)
-    - [tcpw-linux-armv7l](https://raw.githubusercontent.com/jackcvr/tcpw/main/bin/armv7l/tcpw)
-- available on `PyPI` (x86_64 only)
+- available as a binary executable without any dependencies (file size <1M)
 - additionally, you can set:
     - more than one endpoint: `-a google.com:80 -a booble.gum:8080 ...`
     - command, which can be executed only after success, failure or any result: `-on f -a google.com:9999 echo "Endpoint is down"`
@@ -26,9 +20,7 @@ That is yet another alternative to `wait-for-it.sh`.
 
 ## Installation
 
-Download executable file:
-
-`sh -c "wget -O tcpw https://raw.githubusercontent.com/jackcvr/tcpw/main/bin/$(uname -m)/tcpw && chmod +x tcpw"`
+See [Releases](https://github.com/jackcvr/tcpw/releases)
 
 or:
 

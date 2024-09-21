@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+VENV=".venv/bin"
+OUTDIR="pydist"
+
+cp dist/tcpw_linux_amd64_v1/tcpw tcpw/
+rm -rf ${OUTDIR:?}/
+$VENV/python3 -m build -o $OUTDIR .
+$VENV/twine upload $OUTDIR/*

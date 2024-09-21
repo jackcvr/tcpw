@@ -1,8 +1,0 @@
-#!/bin/bash
-set -e
-
-VENV=".venv/bin"
-
-rm -rf dist/
-$VENV/python3 -m build .
-$VENV/twine upload dist/*

@@ -12,13 +12,15 @@ import (
 const badAddr = "localhost:99999"
 const badAddrError = "dial tcp: address 99999: invalid port"
 
-func resetConfig() {
-	config.timeout = 1 * time.Second
-	config.interval = 100 * time.Millisecond
-	config.quiet = true
-	config.endpoints = []string{}
-	config.on = "s"
-	config.command = []string{}
+func newApp() App {
+	return App{
+		timeout:   1 * time.Second,
+		interval:  100 * time.Millisecond,
+		quiet:     true,
+		endpoints: []string{},
+		on:        "s",
+		command:   []string{},
+	}
 }
 
 func getFreeTCPAddr() *net.TCPAddr {
@@ -47,29 +49,27 @@ func startListener(addr string) *net.TCPAddr {
 	return l.Addr().(*net.TCPAddr)
 }
 
-func TestCheckConfig(t *testing.T) {
-	resetConfig()
-
+func TestAppCheck(t *testing.T) {
 	t.Run("Test success", func(t *testing.T) {
-		defer resetConfig()
-		config.endpoints = []string{"localhost:1234"}
-		if err := checkConfig(); err != nil {
+		app := newApp()
+		app.endpoints = []string{"localhost:1234"}
+		if err := app.Check(); err != nil {
 			t.Fatal(err.Error())
 		}
 	})
 
 	t.Run("Test error: no endpoints", func(t *testing.T) {
-		defer resetConfig()
-		if err := checkConfig(); err.Error() != "no endpoints provided" {
+		app := newApp()
+		if err := app.Check(); err.Error() != "no endpoints provided" {
 			t.Fatal("Returned wrong error")
 		}
 	})
 
 	t.Run("Test error: wrong '-on' value", func(t *testing.T) {
-		defer resetConfig()
-		config.endpoints = []string{"localhost:1234"}
-		config.on = "w"
-		if err := checkConfig(); err.Error() != "only 's' or 'f' of 'any' are allowed for '-on' argument" {
+		app := newApp()
+		app.endpoints = []string{"localhost:1234"}
+		app.on = "w"
+		if err := app.Check(); err.Error() != "only 's' or 'f' of 'any' are allowed for '-on' argument" {
 			t.Fatal("Returned wrong error")
 		}
 	})
@@ -81,11 +81,13 @@ func TestTryDial(t *testing.T) {
 		cancel()
 	})
 
+	app := newApp()
+
 	t.Run("Test success", func(t *testing.T) {
 		t.Parallel()
 
 		addr := startListener("")
-		res, err := TryDial(ctx, net.Dialer{Timeout: 1 * time.Second}, addr.String())
+		res, err := app.TryDial(ctx, net.Dialer{Timeout: 1 * time.Second}, addr.String())
 		if err != nil {
 			t.Fatalf("Unexpected error: %v", err)
 		}
@@ -97,7 +99,7 @@ func TestTryDial(t *testing.T) {
 	t.Run("Test fail", func(t *testing.T) {
 		t.Parallel()
 
-		res, err := TryDial(ctx, net.Dialer{}, getFreeTCPAddr().String())
+		res, err := app.TryDial(ctx, net.Dialer{}, getFreeTCPAddr().String())
 		if err != nil {
 			t.Fatalf("Unexpected error: %v", err)
 		}
@@ -109,7 +111,7 @@ func TestTryDial(t *testing.T) {
 	t.Run("Test error", func(t *testing.T) {
 		t.Parallel()
 
-		res, err := TryDial(ctx, net.Dialer{}, badAddr)
+		res, err := app.TryDial(ctx, net.Dialer{}, badAddr)
 		if err == nil {
 			t.Fatalf("Unexpected success: %v", res)
 		} else if err.Error() != badAddrError {
@@ -119,10 +121,8 @@ func TestTryDial(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	resetConfig()
-
 	t.Run("Test success", func(t *testing.T) {
-		defer resetConfig()
+		app := newApp()
 		addr1 := getFreeTCPAddr().String()
 		addr2 := getFreeTCPAddr().String()
 		go func() {
@@ -133,26 +133,26 @@ func TestRun(t *testing.T) {
 			time.Sleep(550 * time.Millisecond)
 			_ = startListener(addr2)
 		}()
-		config.endpoints = []string{addr1, addr2}
-		if err := Run(); err != nil {
+		app.endpoints = []string{addr1, addr2}
+		if err := app.Run(); err != nil {
 			t.Fatalf("Unexpected error: %v", err)
 		}
 	})
 
 	t.Run("Test fail", func(t *testing.T) {
-		defer resetConfig()
-		config.timeout = 100 * time.Millisecond
-		config.endpoints = []string{getFreeTCPAddr().String()}
-		if err := Run(); err == nil {
+		app := newApp()
+		app.timeout = 100 * time.Millisecond
+		app.endpoints = []string{getFreeTCPAddr().String()}
+		if err := app.Run(); err == nil {
 			t.Fatal("Connection succeeded on fail test")
 		}
 	})
 
 	t.Run("Test error", func(t *testing.T) {
-		defer resetConfig()
-		config.timeout = 100 * time.Millisecond
-		config.endpoints = []string{badAddr}
-		if err := Run(); err == nil {
+		app := newApp()
+		app.timeout = 100 * time.Millisecond
+		app.endpoints = []string{badAddr}
+		if err := app.Run(); err == nil {
 			t.Fatalf("Connection succeeded on fail test")
 		} else if err.Error() != badAddrError {
 			t.Fatalf("Unexpected error: %v", err)
@@ -160,12 +160,12 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("Test success with command (-on s)", func(t *testing.T) {
-		defer resetConfig()
+		app := newApp()
 		addr := startListener("")
-		config.endpoints = []string{addr.String()}
+		app.endpoints = []string{addr.String()}
 		file := t.TempDir() + "/test"
-		config.command = []string{"touch", file}
-		if err := Run(); err != nil {
+		app.command = []string{"touch", file}
+		if err := app.Run(); err != nil {
 			t.Fatalf("Unexpected error: %v", err)
 		}
 		if _, err := os.Stat(file); os.IsNotExist(err) {
@@ -174,12 +174,12 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("Test fail with command (-on s)", func(t *testing.T) {
-		defer resetConfig()
-		config.timeout = 100 * time.Millisecond
-		config.endpoints = []string{getFreeTCPAddr().String()}
+		app := newApp()
+		app.timeout = 100 * time.Millisecond
+		app.endpoints = []string{getFreeTCPAddr().String()}
 		file := t.TempDir() + "/test"
-		config.command = []string{"touch", file}
-		if err := Run(); err == nil {
+		app.command = []string{"touch", file}
+		if err := app.Run(); err == nil {
 			t.Fatalf("Connection succeeded on fail test")
 		}
 		if _, err := os.Stat(file); err == nil {
@@ -188,13 +188,13 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("Test fail with command (-on f)", func(t *testing.T) {
-		defer resetConfig()
-		config.timeout = 100 * time.Millisecond
-		config.on = "f"
-		config.endpoints = []string{getFreeTCPAddr().String()}
+		app := newApp()
+		app.timeout = 100 * time.Millisecond
+		app.on = "f"
+		app.endpoints = []string{getFreeTCPAddr().String()}
 		file := t.TempDir() + "/test"
-		config.command = []string{"touch", file}
-		if err := Run(); err != nil {
+		app.command = []string{"touch", file}
+		if err := app.Run(); err != nil {
 			t.Fatalf("Unexpected command(touch ...) error: %v", err)
 		}
 		if _, err := os.Stat(file); os.IsNotExist(err) {
